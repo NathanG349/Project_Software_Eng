@@ -1,0 +1,9 @@
+# Dépendances (Trop lourd)
+node_modules/
+
+# Sécurité (Mot de passe)
+.env
+
+# Système
+.DS_Store
+dist/
