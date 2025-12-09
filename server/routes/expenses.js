@@ -15,4 +15,8 @@ router.get('/trip/:tripId', expenseController.getExpensesByTrip);
 // URL : DELETE /api/expenses/:id
 router.delete('/:id', expenseController.deleteExpense);
 
+// Route pour calculer l'équilibre
+// URL : GET /api/expenses/trip/:tripId/balance
+router.get('/trip/:tripId/balance', expenseController.calculateBalance);
+
 module.exports = router;
