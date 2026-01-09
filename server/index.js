@@ -7,6 +7,7 @@ const cors = require('cors');
 // Import des routes
 const tripsRoutes = require('./routes/trips');
 const expensesRoutes = require('./routes/expenses'); // <--- NOUVEAU (Import du fichier)
+const authRoutes = require('./routes/auth');
 
 const app = express();
 
@@ -21,6 +22,7 @@ mongoose.connect(process.env.MONGO_URI)
 // Utilisation des routes
 app.use('/api/trips', tripsRoutes);
 app.use('/api/expenses', expensesRoutes); // <--- NOUVEAU (Définition de l'URL)
+app.use('/api/auth', authRoutes);
 
 app.get('/', (req, res) => {
   res.send('API Voyage en ligne !');

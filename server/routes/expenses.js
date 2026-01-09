@@ -19,4 +19,6 @@ router.delete('/:id', expenseController.deleteExpense);
 // URL : GET /api/expenses/trip/:tripId/balance
 router.get('/trip/:tripId/balance', expenseController.calculateBalance);
 
+router.put('/:id', expenseController.updateExpense); // Ajoute cette ligne
+
 module.exports = router;

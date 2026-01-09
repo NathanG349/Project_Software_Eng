@@ -119,3 +119,15 @@ exports.calculateBalance = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// 5. MODIFIER UNE DÉPENSE (PUT)
+exports.updateExpense = async (req, res) => {
+  try {
+    const { id } = req.params;
+    // { new: true } renvoie la version modifiée
+    const updatedExpense = await Expense.findByIdAndUpdate(id, req.body, { new: true });
+    res.status(200).json(updatedExpense);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
