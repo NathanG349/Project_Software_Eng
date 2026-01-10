@@ -12,25 +12,25 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
-import { fr } from "date-fns/locale"
+import { enUS } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 
 export default function HomePage() {
   const [trips, setTrips] = useState([]);
-  const { user } = useAuth(); // <--- On récupère l'utilisateur connecté
-  
-  const [form, setForm] = useState({ 
-    title: '', 
-    startDate: undefined, 
-    endDate: undefined, 
-    participants: '' 
+  const { user, logout } = useAuth(); // <--- On récupère l'utilisateur connecté et la fonction logout
+
+  const [form, setForm] = useState({
+    title: '',
+    startDate: undefined,
+    endDate: undefined,
+    participants: ''
   });
 
   // Charger les voyages (Axios envoie le token tout seul)
   useEffect(() => {
     api.get('/trips')
-       .then(res => setTrips(res.data))
-       .catch(err => console.error(err));
+      .then(res => setTrips(res.data))
+      .catch(err => console.error(err));
   }, []);
 
   const handleSubmit = async (e) => {
@@ -42,35 +42,35 @@ export default function HomePage() {
 
     // AJOUT SÉCURITÉ : On s'assure que TOI (le créateur) tu es dans la liste
     if (user && user.username && !participantsArray.includes(user.username)) {
-        participantsArray.push(user.username);
+      participantsArray.push(user.username);
     }
 
     const payload = {
-        title: form.title,
-        participants: participantsArray,
-        startDate: form.startDate ? format(form.startDate, 'yyyy-MM-dd') : '',
-        endDate: form.endDate ? format(form.endDate, 'yyyy-MM-dd') : ''
+      title: form.title,
+      participants: participantsArray,
+      startDate: form.startDate ? format(form.startDate, 'yyyy-MM-dd') : '',
+      endDate: form.endDate ? format(form.endDate, 'yyyy-MM-dd') : ''
     };
 
     try {
-        const res = await api.post('/trips', payload);
-        setTrips([...trips, res.data]);
-        // Reset du formulaire
-        setForm({ title: '', startDate: undefined, endDate: undefined, participants: '' });
+      const res = await api.post('/trips', payload);
+      setTrips([...trips, res.data]);
+      // Reset the form
+      setForm({ title: '', startDate: undefined, endDate: undefined, participants: '' });
     } catch (error) {
-        console.error("Erreur création voyage:", error);
-        alert("Impossible de créer le voyage.");
+      console.error("Error creating trip:", error);
+      alert("Failed to create trip.");
     }
   };
 
   const handleDelete = async (id, e) => {
-    e.preventDefault(); // Empêche d'ouvrir le lien
-    if (window.confirm("Supprimer ce voyage ?")) {
+    e.preventDefault(); // Prevents opening the link
+    if (window.confirm("Delete this trip?")) {
       try {
-          await api.delete(`/trips/${id}`);
-          setTrips(trips.filter(trip => trip._id !== id));
+        await api.delete(`/trips/${id}`);
+        setTrips(trips.filter(trip => trip._id !== id));
       } catch (error) {
-          console.error("Erreur suppression:", error);
+        console.error("Error deleting:", error);
       }
     }
   };
@@ -78,108 +78,113 @@ export default function HomePage() {
   return (
     <div className="space-y-8">
 
-      <h1 className="text-3xl font-bold text-gray-800 tracking-tight">✈️ Mes Voyages</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-gray-800 tracking-tight">✈️ My Trips</h1>
+        <Button variant="outline" onClick={logout} className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200">
+          Logout
+        </Button>
+      </div>
 
-      {/* --- FORMULAIRE DE CRÉATION (Ton design original) --- */}
+      {/* --- CREATION FORM (Your original design) --- */}
       <Card className="shadow-md border-t-4 border-t-blue-600">
         <CardHeader>
-          <CardTitle>Nouveau Voyage</CardTitle>
+          <CardTitle>New Trip</CardTitle>
         </CardHeader>
         <CardContent>
           <form className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Titre du voyage</Label>
+              <Label>Trip Title</Label>
               <Input
-                placeholder="Ex: Roadtrip Italie"
+                placeholder="Ex: Roadtrip Italy"
                 value={form.title}
                 onChange={e => setForm({ ...form, title: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label>Participants (séparés par des virgules)</Label>
+              <Label>Participants (comma separated)</Label>
               <Input
-                placeholder="Ex: Max, Tom, Léa"
+                placeholder="Ex: Max, Tom, Lea"
                 value={form.participants}
                 onChange={e => setForm({ ...form, participants: e.target.value })}
               />
-              <p className="text-xs text-gray-400">Vous ({user?.username}) serez ajouté automatiquement.</p>
+              <p className="text-xs text-gray-400">You ({user?.username}) will be added automatically.</p>
             </div>
-            
-            {/* --- SÉLECTEUR DATE DÉBUT --- */}
+
+            {/* --- START DATE SELECTOR --- */}
             <div className="space-y-2 flex flex-col">
-              <Label>Début</Label>
+              <Label>Start Date</Label>
               <Popover>
-                  <PopoverTrigger asChild>
-                      <Button
-                          variant={"outline"}
-                          className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !form.startDate && "text-muted-foreground"
-                          )}
-                      >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {form.startDate ? format(form.startDate, "PPP", { locale: fr }) : <span>Date de début</span>}
-                      </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 bg-white" align="start">
-                      <Calendar
-                          mode="single"
-                          selected={form.startDate}
-                          onSelect={(date) => setForm({...form, startDate: date})}
-                          initialFocus
-                          locale={fr}
-                      />
-                  </PopoverContent>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !form.startDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {form.startDate ? format(form.startDate, "PPP", { locale: enUS }) : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 bg-white" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={form.startDate}
+                    onSelect={(date) => setForm({ ...form, startDate: date })}
+                    initialFocus
+                    locale={enUS}
+                  />
+                </PopoverContent>
               </Popover>
             </div>
 
-            {/* --- SÉLECTEUR DATE FIN --- */}
+            {/* --- END DATE SELECTOR --- */}
             <div className="space-y-2 flex flex-col">
-              <Label>Fin</Label>
+              <Label>End Date</Label>
               <Popover>
-                  <PopoverTrigger asChild>
-                      <Button
-                          variant={"outline"}
-                          className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !form.endDate && "text-muted-foreground"
-                          )}
-                      >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {form.endDate ? format(form.endDate, "PPP", { locale: fr }) : <span>Date de fin</span>}
-                      </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 bg-white" align="start">
-                      <Calendar
-                          mode="single"
-                          selected={form.endDate}
-                          onSelect={(date) => setForm({...form, endDate: date})}
-                          initialFocus
-                          locale={fr}
-                          defaultMonth={form.startDate || new Date()}
-                          disabled={{ before: form.startDate }}
-                      />
-                  </PopoverContent>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !form.endDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {form.endDate ? format(form.endDate, "PPP", { locale: enUS }) : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 bg-white" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={form.endDate}
+                    onSelect={(date) => setForm({ ...form, endDate: date })}
+                    initialFocus
+                    locale={enUS}
+                    defaultMonth={form.startDate || new Date()}
+                    disabled={{ before: form.startDate }}
+                  />
+                </PopoverContent>
               </Popover>
             </div>
 
             <Button onClick={handleSubmit} className="md:col-span-2 w-full bg-blue-600 hover:bg-blue-700">
-              Créer le voyage
+              Create Trip
             </Button>
           </form>
         </CardContent>
       </Card>
 
-      {/* --- LISTE DES VOYAGES --- */}
+      {/* --- LIST OF TRIPS --- */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {trips.length === 0 && <p className="text-gray-400 italic">Aucun voyage trouvé.</p>}
-        
+        {trips.length === 0 && <p className="text-gray-400 italic">No trips found.</p>}
+
         {trips.map(trip => (
           <Link key={trip._id} to={`/trip/${trip._id}`}>
             <Card className="hover:shadow-lg transition-shadow cursor-pointer group relative overflow-hidden h-full">
               {/* Petite barre dégradée décorative */}
               <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-blue-400 to-purple-500"></div>
-              
+
               <CardHeader>
                 <CardTitle className="flex justify-between items-center">
                   <span className="truncate pr-2">{trip.title}</span>
@@ -193,8 +198,8 @@ export default function HomePage() {
                   </Button>
                 </CardTitle>
                 <p className="text-sm text-gray-500">
-                  {trip.startDate ? new Date(trip.startDate).toLocaleDateString() : '...'} 
-                  {' ➔ '} 
+                  {trip.startDate ? new Date(trip.startDate).toLocaleDateString() : '...'}
+                  {' ➔ '}
                   {trip.endDate ? new Date(trip.endDate).toLocaleDateString() : '...'}
                 </p>
               </CardHeader>

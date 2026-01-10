@@ -1,11 +1,12 @@
 const mongoose = require('mongoose');
 
 const TripSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // <--- AJOUT IMPORTANT
   title: { type: String, required: true },
   participants: [String],
   startDate: Date,
   endDate: Date,
-  
+
   // 👇 C'EST ICI QU'ON CHANGE LA STRUCTURE DE L'ACTIVITÉ
   activities: [{
     name: { type: String, required: true }, // Nom

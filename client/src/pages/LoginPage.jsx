@@ -19,32 +19,32 @@ export default function LoginPage() {
       const res = await api.post('/auth/login', { email, password });
       // On utilise la fonction login du contexte
       login(res.data.token, res.data.user);
-      navigate('/'); // Redirection vers l'accueil
+      navigate('/'); // Redirect to home
     } catch (err) {
-      setError(err.response?.data?.message || "Erreur de connexion");
+      setError(err.response?.data?.message || "Login failed");
     }
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="p-8 bg-white rounded-lg shadow-md w-96">
-        <h1 className="text-2xl font-bold mb-6 text-center">Connexion</h1>
+        <h1 className="text-2xl font-bold mb-6 text-center">Login</h1>
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label>Email</Label>
             <Input type="email" value={email} onChange={e => setEmail(e.target.value)} required />
           </div>
           <div>
-            <Label>Mot de passe</Label>
+            <Label>Password</Label>
             <Input type="password" value={password} onChange={e => setPassword(e.target.value)} required />
           </div>
-          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">Se connecter</Button>
+          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">Login</Button>
         </form>
-        
+
         <p className="mt-4 text-center text-sm">
-          Pas de compte ? <Link to="/register" className="text-blue-600 hover:underline">S'inscrire</Link>
+          No account? <Link to="/register" className="text-blue-600 hover:underline">Register</Link>
         </p>
       </div>
     </div>
