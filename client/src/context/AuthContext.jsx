@@ -6,30 +6,28 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Au chargement de l'app, on vérifie s'il y a un token stocké
+  // Check for stored token on load
   useEffect(() => {
     const token = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
-    
+
     if (token && storedUser) {
       setUser(JSON.parse(storedUser));
     }
     setLoading(false);
   }, []);
 
-  // Fonction de connexion
   const login = (token, userData) => {
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
   };
 
-  // Fonction de déconnexion
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
-    window.location.href = '/login'; // Redirection brutale mais efficace
+    window.location.href = '/login';
   };
 
   return (
@@ -39,5 +37,4 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Hook personnalisé pour utiliser le contexte plus facilement
 export const useAuth = () => useContext(AuthContext);

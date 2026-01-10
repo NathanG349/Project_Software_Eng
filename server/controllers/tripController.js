@@ -1,9 +1,8 @@
 const Trip = require('../models/Trip');
 
-// 1. Récupérer tous les voyages
+// Get all trips for current user
 exports.getAllTrips = async (req, res) => {
   try {
-    // On ne cherche que les voyages qui ont MON ID
     const trips = await Trip.find({ userId: req.user.id });
     res.status(200).json(trips);
   } catch (error) {
@@ -11,13 +10,12 @@ exports.getAllTrips = async (req, res) => {
   }
 };
 
-// 2. Créer un voyage
+// Create new trip
 exports.createTrip = async (req, res) => {
   try {
     const newTrip = new Trip({
       ...req.body,
-      userId: req.user.id // <--- C'est ici que la magie opère !
-      // "req.user.id" vient du middleware auth qu'on a codé à l'étape 7
+      userId: req.user.id
     });
 
     const savedTrip = await newTrip.save();
@@ -27,7 +25,7 @@ exports.createTrip = async (req, res) => {
   }
 };
 
-// 3. Récupérer un seul voyage (avec son ID)
+// Get single trip
 exports.getTripById = async (req, res) => {
   try {
     const trip = await Trip.findById(req.params.id);
@@ -38,12 +36,12 @@ exports.getTripById = async (req, res) => {
   }
 };
 
-// 4. Ajouter une activité
+// Add activity to trip
 exports.addActivity = async (req, res) => {
   try {
     const tripId = req.params.id;
     const activityData = req.body;
-    
+
     const trip = await Trip.findById(tripId);
     if (!trip) return res.status(404).json({ message: "Voyage introuvable" });
 
@@ -56,7 +54,7 @@ exports.addActivity = async (req, res) => {
   }
 };
 
-// 5. Supprimer un voyage (C'EST CELLE-LA QUI MANQUAIT !)
+// Delete trip
 exports.deleteTrip = async (req, res) => {
   try {
     await Trip.findByIdAndDelete(req.params.id);
@@ -64,63 +62,55 @@ exports.deleteTrip = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-};  
+};
 
-// 6. SUPPRIMER UNE ACTIVITÉ
+// Delete activity
 exports.deleteActivity = async (req, res) => {
   try {
-    const { id, activityId } = req.params; // On récupère l'ID du voyage et de l'activité
-    
-    // 1. On trouve le voyage
-    const trip = await Trip.findById(id);
-    if (!trip) return res.status(404).json({ message: "Voyage introuvable" });
+    const { id, activityId } = req.params;
 
-    // 2. On filtre pour garder toutes les activités SAUF celle qu'on veut supprimer
-    // (C'est comme ça qu'on supprime un élément d'un tableau en Mongo)
+    const trip = await Trip.findById(id);
+    if (!trip) return res.status(404).json({ message: "Trip not found" });
+
     trip.activities = trip.activities.filter(act => act._id.toString() !== activityId);
-    
-    // 3. On sauvegarde le voyage modifié
+
     await trip.save();
 
-    // 4. On renvoie le voyage mis à jour au frontend
     res.status(200).json(trip);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// 7. MODIFIER UN VOYAGE (PUT)
+// Update trip details
 exports.updateTrip = async (req, res) => {
   try {
     const { id } = req.params;
-    const updates = req.body; // Contient title, dates, participants...
-    
-    // { new: true } permet de renvoyer le voyage une fois modifié, pas l'ancien
+    const updates = req.body;
+
     const updatedTrip = await Trip.findByIdAndUpdate(id, updates, { new: true });
-    
-    if (!updatedTrip) return res.status(404).json({ message: "Voyage introuvable" });
-    
+
+    if (!updatedTrip) return res.status(404).json({ message: "Trip not found" });
+
     res.status(200).json(updatedTrip);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// 8. MODIFIER UNE ACTIVITÉ
+// Update activity
 exports.updateActivity = async (req, res) => {
   try {
     const { id, activityId } = req.params;
-    
+
     const trip = await Trip.findById(id);
-    if (!trip) return res.status(404).json({ message: "Voyage introuvable" });
+    if (!trip) return res.status(404).json({ message: "Trip not found" });
 
-    // On trouve l'activité dans le tableau (méthode Mongoose spéciale pour les sous-documents)
     const activity = trip.activities.id(activityId);
-    if (!activity) return res.status(404).json({ message: "Activité introuvable" });
+    if (!activity) return res.status(404).json({ message: "Activity not found" });
 
-    // On met à jour les champs
     activity.set(req.body);
-    
+
     await trip.save();
     res.status(200).json(trip);
   } catch (error) {

@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils"
 
 export default function HomePage() {
   const [trips, setTrips] = useState([]);
-  const { user, logout } = useAuth(); // <--- On récupère l'utilisateur connecté et la fonction logout
+  const { user, logout } = useAuth(); // get user & logout function
 
   const [form, setForm] = useState({
     title: '',
@@ -26,7 +26,7 @@ export default function HomePage() {
     participants: ''
   });
 
-  // Charger les voyages (Axios envoie le token tout seul)
+  // Fetch trips
   useEffect(() => {
     api.get('/trips')
       .then(res => setTrips(res.data))
@@ -37,10 +37,10 @@ export default function HomePage() {
     e.preventDefault();
     if (!form.title) return;
 
-    // On transforme "Tom, Léa" en ["Tom", "Léa"]
+    // Convert "Tom, Lea" -> ["Tom", "Lea"]
     const participantsArray = form.participants.split(',').map(p => p.trim()).filter(p => p !== "");
 
-    // AJOUT SÉCURITÉ : On s'assure que TOI (le créateur) tu es dans la liste
+    // Ensure the creator is in the participants list
     if (user && user.username && !participantsArray.includes(user.username)) {
       participantsArray.push(user.username);
     }
@@ -85,7 +85,7 @@ export default function HomePage() {
         </Button>
       </div>
 
-      {/* --- CREATION FORM (Your original design) --- */}
+      {/* --- CREATION FORM --- */}
       <Card className="shadow-md border-t-4 border-t-blue-600">
         <CardHeader>
           <CardTitle>New Trip</CardTitle>
@@ -110,7 +110,7 @@ export default function HomePage() {
               <p className="text-xs text-gray-400">You ({user?.username}) will be added automatically.</p>
             </div>
 
-            {/* --- START DATE SELECTOR --- */}
+            {/* --- START DATE --- */}
             <div className="space-y-2 flex flex-col">
               <Label>Start Date</Label>
               <Popover>
@@ -138,7 +138,7 @@ export default function HomePage() {
               </Popover>
             </div>
 
-            {/* --- END DATE SELECTOR --- */}
+            {/* --- END DATE --- */}
             <div className="space-y-2 flex flex-col">
               <Label>End Date</Label>
               <Popover>
@@ -175,14 +175,14 @@ export default function HomePage() {
         </CardContent>
       </Card>
 
-      {/* --- LIST OF TRIPS --- */}
+      {/* --- TRIP LIST --- */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {trips.length === 0 && <p className="text-gray-400 italic">No trips found.</p>}
 
         {trips.map(trip => (
           <Link key={trip._id} to={`/trip/${trip._id}`}>
             <Card className="hover:shadow-lg transition-shadow cursor-pointer group relative overflow-hidden h-full">
-              {/* Petite barre dégradée décorative */}
+              {/* Decorative gradient bar */}
               <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-blue-400 to-purple-500"></div>
 
               <CardHeader>

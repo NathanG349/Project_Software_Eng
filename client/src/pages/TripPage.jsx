@@ -18,7 +18,7 @@ import { format, parseISO, isValid } from "date-fns" // Ajout de parseISO et isV
 import { enUS } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 
-// --- GÉNÉRATION DES CRÉNEAUX STANDARDS (15 min) ---
+// --- 15 min slots generation ---
 const TIME_SLOTS = Array.from({ length: 96 }).map((_, i) => {
   const hour = Math.floor(i / 4).toString().padStart(2, '0');
   const minutes = (i % 4) * 15;
@@ -32,16 +32,15 @@ export default function TripPage() {
   const [expenses, setExpenses] = useState([]);
   const [balance, setBalance] = useState(null);
 
-  // --- ÉTATS DES MODALES ---
+  // --- STATE ---
   const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  // --- ÉTATS POUR L'ÉDITION ---
   const [editingActivityId, setEditingActivityId] = useState(null);
   const [editingExpenseId, setEditingExpenseId] = useState(null);
 
-  // --- FORMULAIRES ---
+  // --- FORMS ---
   const [activityForm, setActivityForm] = useState({
     name: '', date: undefined, startTime: '', endTime: '', address: '', notes: ''
   });
@@ -54,7 +53,7 @@ export default function TripPage() {
     title: '', startDate: undefined, endDate: undefined, participantsStr: ''
   });
 
-  // --- CHARGEMENT INITIAL ---
+  // --- INITIAL LOAD ---
   const refreshBalance = async () => {
     try {
       const res = await api.get(`/expenses/trip/${id}/balance`);
@@ -68,29 +67,26 @@ export default function TripPage() {
     refreshBalance();
   }, [id]);
 
-  // =========================================================================
-  // LOGIQUE DE TRI ET REGROUPEMENT DES ACTIVITÉS (NOUVEAU)
-  // =========================================================================
+  // Group activities by date
   const groupedActivities = useMemo(() => {
     if (!trip || !trip.activities) return { groups: [], noDate: [] };
 
     const withDate = [];
     const withoutDate = [];
 
-    // 1. Séparation
+    // 1. Separate
     trip.activities.forEach(act => {
       if (act.date) withDate.push(act);
       else withoutDate.push(act);
     });
 
-    // 2. Tri global par date
+    // 2. Sort by date
     withDate.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    // 3. Regroupement par jour
-    const groups = {}; // Objet temporaire : { "2024-05-20": [act1, act2], ... }
+    // 3. Group by day
+    const groups = {};
 
     withDate.forEach(act => {
-      // On sécurise la date pour avoir une clé string propre (ex: "2024-05-20")
       const dateKey = new Date(act.date).toISOString().split('T')[0];
 
       if (!groups[dateKey]) {
@@ -102,19 +98,16 @@ export default function TripPage() {
       groups[dateKey].activities.push(act);
     });
 
-    // 4. Transformation en tableau et Tri interne (par heure)
+    // 4. Sort internally by time
     const sortedGroups = Object.values(groups).map(group => {
-      // Tri des activités DANS le groupe
       group.activities.sort((a, b) => {
-        // Si pas d'heure, on met à la fin ("ZZZ" est après les chiffres)
-        const timeA = a.startTime || "ZZZ";
+        const timeA = a.startTime || "ZZZ"; // no time -> end of list
         const timeB = b.startTime || "ZZZ";
         return timeA.localeCompare(timeB);
       });
       return group;
     });
 
-    // On s'assure que les groupes sont bien triés par date (normalement oui grâce à l'étape 2, mais sécurité)
     sortedGroups.sort((a, b) => a.dateObj - b.dateObj);
 
     return { groups: sortedGroups, noDate: withoutDate };
@@ -123,7 +116,7 @@ export default function TripPage() {
 
 
   // =========================================================================
-  // 1. GESTION DU VOYAGE
+  // 1. TRIP MANAGEMENT
   // =========================================================================
   const openEditModal = () => {
     setEditForm({
@@ -158,7 +151,7 @@ export default function TripPage() {
 
 
   // =========================================================================
-  // 2. GESTION DES ACTIVITÉS
+  // 2. ACTIVITY MANAGEMENT
   // =========================================================================
 
   const openActivityModal = (activity = null) => {
@@ -214,7 +207,7 @@ export default function TripPage() {
 
 
   // =========================================================================
-  // 3. GESTION DES DÉPENSES
+  // 3. EXPENSE MANAGEMENT
   // =========================================================================
 
   const openExpenseModal = (expense = null) => {
@@ -291,7 +284,7 @@ export default function TripPage() {
     <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans">
       <div className="max-w-6xl mx-auto space-y-6">
 
-        {/* --- EN-TÊTE --- */}
+        {/* --- HEADER --- */}
         <div className="flex justify-between items-center">
           <Link to="/">
             <Button variant="outline">← Back</Button>
@@ -301,7 +294,7 @@ export default function TripPage() {
             <div className="flex items-center gap-2">
               <h1 className="text-3xl font-bold tracking-tight">{trip.title}</h1>
 
-              {/* MODAL MODIF VOYAGE */}
+              {/* EDIT MODAL */}
               <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
                 <DialogTrigger asChild>
                   <Button variant="ghost" size="icon" onClick={openEditModal} className="h-8 w-8 text-gray-400 hover:text-blue-600">
@@ -370,7 +363,7 @@ export default function TripPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-          {/* --- COLONNE GAUCHE : PLANNING (REFAITE) --- */}
+          {/* --- LEFT COLUMN: SCHEDULE --- */}
           <Card className="shadow-sm border-blue-100 h-fit">
             <CardHeader className="bg-blue-50/50 border-b pb-4 flex flex-row justify-between items-center">
               <CardTitle className="text-blue-700">📅 Schedule & Activities</CardTitle>
@@ -426,29 +419,29 @@ export default function TripPage() {
             <CardContent className="pt-6 space-y-6">
               <div className="space-y-6">
 
-                {/* 1. CAS VIDE */}
+                {/* 1. EMPTY CASE */}
                 {trip.activities.length === 0 && <p className="text-sm text-gray-400 italic text-center">No activities planned.</p>}
 
-                {/* 2. GROUPES PAR DATE */}
+                {/* 2. GROUP BY DATE */}
                 {groupedActivities.groups.map((group, index) => {
-                  // Formatage du titre : "Lundi 12 décembre" (1ère lettre majuscule)
+                  // Format title: "Monday December 12th"
                   const dateStr = format(group.dateObj, "EEEE d MMMM", { locale: enUS });
                   const formattedDate = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
 
                   return (
                     <div key={index} className="space-y-3">
-                      {/* Titre du jour (Démarcation) */}
+                      {/* Day Title */}
                       <h3 className="text-sm font-bold text-blue-900 bg-blue-50 px-3 py-1.5 rounded-md inline-block border border-blue-100">
                         {formattedDate}
                       </h3>
 
-                      {/* Liste des activités du jour */}
+                      {/* Activities List */}
                       {group.activities.map(act => (
                         <div key={act._id} className="bg-white p-4 rounded-lg border shadow-sm relative group hover:border-blue-300 transition-all ml-2">
                           <div className="flex justify-between items-start">
                             <div className="w-full pr-8">
                               <div className="flex items-center gap-2 mb-1">
-                                {/* Affichage heure ou placeholder */}
+                                {/* Time or placeholder */}
                                 <div className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded flex items-center gap-1">
                                   <Clock className="w-3 h-3" />
                                   {act.startTime ? (
@@ -476,7 +469,7 @@ export default function TripPage() {
                   );
                 })}
 
-                {/* 3. ACTIVITÉS SANS DATE (À LA FIN) */}
+                {/* 3. NO DATE ACTIVITIES (AT THE END) */}
                 {groupedActivities.noDate.length > 0 && (
                   <div className="space-y-3 border-t border-dashed pt-4 mt-6">
                     <h3 className="text-sm font-bold text-gray-500 bg-gray-100 px-3 py-1.5 rounded-md inline-block">
@@ -503,7 +496,7 @@ export default function TripPage() {
             </CardContent>
           </Card>
 
-          {/* --- COLONNE DROITE : DÉPENSES (Identique à avant) --- */}
+          {/* --- RIGHT COLUMN: EXPENSES --- */}
           <Card className="shadow-sm border-orange-100 h-fit">
             <CardHeader className="bg-orange-50/50 border-b pb-4 flex flex-row justify-between items-center">
               <CardTitle className="text-orange-700">💸 Expenses</CardTitle>

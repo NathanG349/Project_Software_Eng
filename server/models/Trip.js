@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const TripSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // <--- AJOUT IMPORTANT
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // Link to creator
   title: { type: String, required: true },
   participants: [String],
   startDate: Date,
